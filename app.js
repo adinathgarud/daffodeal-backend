@@ -5,10 +5,17 @@ const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 
+// app.use(cors({
+//   origin: ['*'],
+//   credentials: true,
+//   allowedHeaders: ['X-CSRF-Token', 'X-Requested-With', 'Accept', 'Accept-Version', 'Content-Length', 'Content-MD5', 'Content-Type', 'Date', 'X-Api-Version']
+// }));
+
 app.use(cors({
-  origin: ['*',"https://daffodeal.com"],
-  credentials: true
+  origin: ['*']
 }));
+
+
 app.use(express.static('public'))
 app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
