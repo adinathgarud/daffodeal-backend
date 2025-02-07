@@ -6,11 +6,10 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 
 app.use(cors({
-  origin: 'https://daffodeal.com', // Replace with your frontend URL
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Specify allowed methods
-  credentials: true // If you need to include cookies or authorization headers
+  origin: ['*',"https://daffodeal.com"],
+  credentials: true
 }));
-
+app.use(express.static('public'))
 app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
 app.use("/test", (req, res) => {
