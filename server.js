@@ -25,6 +25,11 @@ cloudinary.config({
 })
 
 
+app.get("/",(req,res) => {
+  res.send(" Hello, Express App is Running");
+  res.send(" Hello");
+});
+
 // create server
 const server = app.listen(process.env.PORT, () => {
   console.log(
