@@ -16,7 +16,7 @@ app.use(cors({
 }));
 
 
-app.use(express.static('public'))
+
 app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
 app.use("/test", (req, res) => {
