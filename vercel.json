@@ -2,19 +2,14 @@
     "version": 2,
     "builds": [
       {
-        "src": "sercer.js",
+        "src": "server.js",
         "use": "@vercel/node"
       }
     ],
     "routes": [
-      { "handle": "filesystem" },
-      {
-        "src": "routes/(.*)",
-        "dest": "routes/$1"
-      },
       {
         "src": "/(.*)",
-        "dest": "/index.js"
+        "dest": "server.js"
       }
     ]
   }
