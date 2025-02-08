@@ -9,12 +9,17 @@ const cors = require("cors");
 //   origin: ['*'],
 //   credentials: true,
 //   allowedHeaders: ['X-CSRF-Token', 'X-Requested-With', 'Accept', 'Accept-Version', 'Content-Length', 'Content-MD5', 'Content-Type', 'Date', 'X-Api-Version']
-// }));
-
+// }));\
 app.use(cors({
-  origin: ['http://localhost:3000'],
-  credentials: true
+  origin: ["http://localhost:3000", ], // Add frontend domains here
+  methods: "GET,POST,PUT,DELETE",
+  allowedHeaders: "Content-Type,Authorization"
 }));
+
+// app.use(cors({
+//   origin: ['http://localhost:3000'],
+//   credentials: true
+// }));
 
 
 
