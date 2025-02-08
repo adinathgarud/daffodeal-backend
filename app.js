@@ -10,8 +10,20 @@ const cors = require("cors");
 //   credentials: true,
 //   allowedHeaders: ['X-CSRF-Token', 'X-Requested-With', 'Accept', 'Accept-Version', 'Content-Length', 'Content-MD5', 'Content-Type', 'Date', 'X-Api-Version']
 // }));\
+
+const allowedOrigins = [
+  "https://daffodeal.com",
+  "http://localhost:3000"
+];
+
 app.use(cors({
-  origin: ["http://localhost:3000" ], // Add frontend domains here
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   methods: "GET,POST,PUT,DELETE",
   allowedHeaders: "Content-Type,Authorization"
 }));
