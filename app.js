@@ -6,7 +6,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 
 app.use(cors({
-  origin: ['https://daffodeal.com',],
+  origin: ['*','https://daffodeal.com'],
   credentials: true
  }));
 // app.use(cors({
