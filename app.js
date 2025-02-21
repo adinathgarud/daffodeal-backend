@@ -11,7 +11,14 @@ const cors = require("cors");
 //   credentials: true
 // }));
 
-app.use(cors());
+const corsOptions = {
+  origin: ["http://localhost:3000", "https://daffodeal.com", "http://daffodeal.com"],
+  credentials: true,
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
 
 app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
