@@ -9,6 +9,8 @@ const cloudinary = require("cloudinary");
 const catchAsyncErrors = require("../middleware/catchAsyncErrors");
 const ErrorHandler = require("../utils/ErrorHandler");
 const sendShopToken = require("../utils/shopToken");
+const axios = require("axios");
+require("dotenv").config();
 
 // create shop
 router.post("/create-shop", catchAsyncErrors(async (req, res, next) => {
@@ -35,6 +37,8 @@ router.post("/create-shop", catchAsyncErrors(async (req, res, next) => {
       address: req.body.address,
       phoneNumber: req.body.phoneNumber,
       zipCode: req.body.zipCode,
+      gstNumber: req.body.gstNumber,
+      gstDetails: req.body.gstDetails,
     };
 
     const activationToken = createActivationToken(seller);
@@ -82,7 +86,7 @@ router.post(
       if (!newSeller) {
         return next(new ErrorHandler("Invalid token", 400));
       }
-      const { name, email, password, zipCode, address, phoneNumber } =
+      const { name, email, password, zipCode, address, phoneNumber, gstNumber, gstDetails } = newSeller;
         newSeller;
 
       let seller = await Shop.findOne({ email });
@@ -98,6 +102,8 @@ router.post(
         zipCode,
         address,
         phoneNumber,
+        gstNumber,
+        gstDetails,
       });
 
       sendShopToken(seller, 201, res);
@@ -359,5 +365,30 @@ router.delete(
     }
   })
 );
+
+router.get("/verify-gst/:gstNumber", async (req, res) => {
+  const { gstNumber } = req.params;
+
+  if (!gstNumber) {
+    return res.status(400).json({ error: "GST Number is required" });
+  }
+
+  try {
+    const response = await axios.get(
+      `https://gst-verification-api-get-profile-returns-data.p.rapidapi.com/v1/gstin/${gstNumber}/details`,
+      {
+        headers: {
+          "x-rapidapi-key": process.env.RAPIDAPI_KEY, // Store API key in .env
+          "x-rapidapi-host": "gst-verification-api-get-profile-returns-data.p.rapidapi.com",
+        },
+      }
+    );
+
+    res.json(response.data); // Send API response to the frontend
+  } catch (error) {
+    console.error("API Error:", error.response ? error.response.data : error.message);
+    res.status(500).json({ error: error.response?.data || "API issue or invalid GST number" });
+  }
+});
 
 module.exports = router;
