@@ -17,4 +17,17 @@ const sendToken = (user, statusCode, res) => {
   });
 };
 
-module.exports = sendToken;
+const sendTokenUser = (user, statusCode, res) => {
+
+  // Options for cookies
+  const token = user.getJwtToken(); // Assuming user model has a method to generate JWT token
+
+  res.status(statusCode).json({
+    success: true,
+    message, // ✅ Include success message
+    token,
+    user,
+  });
+};
+
+module.exports = sendToken, sendTokenUser;

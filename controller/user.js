@@ -7,6 +7,7 @@ const catchAsyncErrors = require("../middleware/catchAsyncErrors");
 const jwt = require("jsonwebtoken");
 const sendMail = require("../utils/sendMail");
 const sendToken = require("../utils/jwtToken");
+const sendTokenUser = require("../utils/jwtToken");
 const { isAuthenticated, isAdmin } = require("../middleware/auth");
 
 // create user
@@ -33,7 +34,7 @@ router.post("/create-user", async (req, res, next) => {
       // },
     });
 
-    sendToken(user, 201, res);
+    sendTokenUser(user, 201, res,"User created successfully!");
 
     //const activationToken = createActivationToken(user);
 
