@@ -13,7 +13,7 @@ const { isAuthenticated, isAdmin } = require("../middleware/auth");
 // create user
 router.post("/create-user", async (req, res, next) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, mobile } = req.body;
     const userEmail = await User.findOne({ email });
 
     if (userEmail) {
@@ -27,6 +27,7 @@ router.post("/create-user", async (req, res, next) => {
     const user =await User.create( {
       name: name,
       email: email,
+      mobile: mobile,
       password: password,
       // avatar: {
       //   public_id: myCloud.public_id,
@@ -182,7 +183,7 @@ router.put(
   isAuthenticated,
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const { email, password, phoneNumber, name } = req.body;
+      const { email, password, mobile, name } = req.body;
 
       const user = await User.findOne({ email }).select("+password");
 
@@ -200,7 +201,7 @@ router.put(
 
       user.name = name;
       user.email = email;
-      user.phoneNumber = phoneNumber;
+      user.mobile = mobile;
 
       await user.save();
 
