@@ -1,5 +1,6 @@
 const express = require("express");
 const User = require("../model/user");
+const OTPSchema = require("../model/otp");
 const router = express.Router();
 const cloudinary = require("cloudinary");
 const ErrorHandler = require("../utils/ErrorHandler");
@@ -8,32 +9,118 @@ const jwt = require("jsonwebtoken");
 const sendMail = require("../utils/sendMail");
 const sendToken = require("../utils/jwtToken");
 const sendTokenUser = require("../utils/jwtToken");
+const twilio = require("twilio");
 const { isAuthenticated, isAdmin } = require("../middleware/auth");
+
+const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+
+// ✅ Step 1: Send OTP
+router.post("/send-otp", async (req, res) => {
+  const { mobile } = req.body;
+  console.log(mobile)
+
+  // ✅ Check if mobile number is provided
+  if (!mobile) {
+    return res.status(400).json({ success: false, message: "Mobile number is required!" });
+  }
+
+  // ✅ Generate a 6-digit OTP
+  const otp = Math.floor(100000 + Math.random() * 900000);
+
+  //show generated otp
+  console.log(otp)
+  
+
+
+  console.log(process.env.TWILIO_PHONE_NUMBER)
+  try {
+    // ✅ Store OTP in the database (Upsert: If exists, update. Else, insert)
+    await OTPSchema.findOneAndUpdate(
+      { mobile },
+      { mobile, otp, verified: false, createdAt: Date.now() },
+      { upsert: true, new: true }
+    );
+    
+    // ✅ Ensure Twilio Phone Number is configured
+    if (!process.env.TWILIO_PHONE_NUMBER) {
+      return res.status(500).json({ success: false, message: "Twilio phone number is not set!" });
+    }
+    console.log("All is well !")
+
+    // ✅ Send OTP via Twilio SMS
+    const message = await client.messages.create({
+      body: `Your OTP code is ${otp}`,
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to: mobile,
+    });
+    console.log("All is well !")
+
+    console.log("OTP sent:", message.sid); // ✅ Debugging log (optional)
+
+    res.status(200).json({ success: true, message: "OTP sent successfully!" });
+
+  } catch (error) {
+    console.error("Error sending OTP:", error.message); // ✅ Debugging log
+    res.status(500).json({ success: false, message: "Failed to send OTP." });
+  }
+});
+
+// ✅ Step 2: Verify OTP
+router.post("/verify-otp", async (req, res, next) => {
+  try {
+    const { mobile, otp } = req.body;
+    const otpRecord = await OTPSchema.findOne({ mobile });
+
+    if (!otpRecord || otpRecord.otp !== otp) {
+      return next(new ErrorHandler("Invalid OTP", 400));
+    }
+
+    // Mark OTP as verified (not deleting yet)
+    await OTPSchema.updateOne({ mobile }, { verified: true });
+
+    res.status(200).json({ success: true, message: "OTP verified successfully!" });
+
+  } catch (error) {
+    return next(new ErrorHandler(error.message, 400));
+  }
+});
 
 // create user
 router.post("/create-user", async (req, res, next) => {
   try {
     const { name, email, password, mobile } = req.body;
     const userEmail = await User.findOne({ email });
+    // Check if OTP was verified for this mobile number
+    const otpRecord = await OTPSchema.findOne({ mobile, verified: true });
+    if (!otpRecord) {
+      return next(new ErrorHandler("OTP not verified for this number", 400));
+    }
 
-    if (userEmail) {
-      return next(new ErrorHandler("User already exists", 400));
+    const existingUser = await User.findOne({ $or: [{ email }, { mobile }] });
+    if (existingUser) {
+      return next(new ErrorHandler("User with this email or mobile already exists", 400));
     }
 
     // const myCloud = await cloudinary.v2.uploader.upload(avatar, {
     //   folder: "avatars",
     // });
 
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+
     const user =await User.create( {
       name: name,
       email: email,
       mobile: mobile,
-      password: password,
+      password: hashedPassword,
       // avatar: {
       //   public_id: myCloud.public_id,
       //   url: myCloud.secure_url,
       // },
     });
+
+    // Delete the OTP record (since it's no longer needed)
+    await OTPSchema.deleteOne({ mobile });
 
     sendTokenUser(user, 201, res,"User created successfully!");
 
