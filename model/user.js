@@ -26,6 +26,9 @@ const userSchema = new mongoose.Schema({
       country: {
         type: String,
       },
+      states: {
+        type: String,
+      },
       city:{
         type: String,
       },
