@@ -2,13 +2,108 @@ const express = require("express");
 const { isSeller, isAuthenticated, isAdmin } = require("../middleware/auth");
 const catchAsyncErrors = require("../middleware/catchAsyncErrors");
 const router = express.Router();
+
 const Product = require("../model/product");
 const Order = require("../model/order");
 const Shop = require("../model/shop");
 const cloudinary = require("cloudinary");
 const ErrorHandler = require("../utils/ErrorHandler");
+const multer = require("multer");
+const path = require("path");
+const bodyParser = require("body-parser");
+const csv = require("csvtojson");
+const { insertMany } = require("../model/user");
 
-  
+router.use(bodyParser.urlencoded({ extended: true }));
+router.use(express.static(path.resolve(__dirname, "public")));
+
+// Multer Storage Configuration
+var storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, "../public/uploads")); // Fixed path
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`); // Added timestamp to prevent overwrites
+  },
+});
+
+var upload = multer({ storage: storage });
+
+// Route to Upload and Parse CSV
+router.post(
+  "/create-products",
+  upload.single("file"),
+  catchAsyncErrors(async (req, res) => {
+    try {
+      const shopId = req.body.shopId;
+      // Validate shopId
+      if (!shopId) {
+        return res.status(400).json({
+          success: false,
+          message: "Shop ID is required",
+        });
+      }
+
+      const shop = await Shop.findById(shopId);
+      if (!shop) {
+        return res.status(404).json({
+          success: false,
+          message: "Shop not found",
+        });
+      }
+      let productData = []; // Corrected variable name
+
+
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: "No file uploaded",
+        });
+      }
+
+      // Convert CSV to JSON
+      const jsonArray = await csv().fromFile(req.file.path);
+
+      // Loop through CSV data and push into productData array
+      jsonArray.forEach((item) => {
+        productData.push({
+          shopId: shopId, // Attach shop ID
+          shop: shop,
+          name: item.Name,
+          description: item.Description,
+          productDetail: item.ProductDetail,
+          category: item.Category,
+          color: item.Color,
+          size: item.Size, // Fixed 'secure_urlize' typo
+          tags: item.Tags,
+          originalPrice: item.OriginalPrice,
+          discountPrice: item.DiscountPrice,
+          stock: item.Stock,
+          images: item.Images.split(",").map((url, index) => ({
+            public_id: `image-${index + 1}`, // Generate a placeholder public_id
+            url: url.trim(), // Trim spaces to clean URLs
+          })),
+        });
+      });
+
+      await Product.insertMany(productData);
+
+      console.log(productData); // Debugging output
+
+      res.status(200).json({
+        success: true,
+        message: "CSV Imported Successfully",
+        data: productData, // Return the corrected data array
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message || "CSV Processing Failed",
+      });
+    }
+  })
+);
+
 // create product
 router.post(
   "/create-product",
@@ -26,21 +121,21 @@ router.post(
         } else {
           images = req.body.images;
         }
-      
-        
+
+
         const imagesLinks = [];
-      
+
         for (let i = 0; i < images.length; i++) {
           const result = await cloudinary.v2.uploader.upload(images[i], {
             folder: "products",
           });
-      
+
           imagesLinks.push({
             public_id: result.public_id,
             url: result.secure_url,
           });
         }
-      
+
         const productData = req.body;
         productData.images = imagesLinks;
         productData.shop = shop;
@@ -57,12 +152,6 @@ router.post(
     }
   })
 );
-
-
-
-
-
-
 
 // get all products of a shop
 router.get(
@@ -110,7 +199,6 @@ router.delete(
     }
   })
 );
-
 
 // get all products
 router.get(

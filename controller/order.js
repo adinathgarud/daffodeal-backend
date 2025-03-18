@@ -79,9 +79,13 @@ router.get(
         createdAt: -1,
       });
 
+      const totalOrdersCount = await Order.countDocuments({
+        "cart.shopId": req.params.shopId,
+      });
+
       res.status(200).json({
         success: true,
-        orders,
+        orders,totalOrdersCount,
       });
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));

@@ -10,23 +10,6 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET, // Add your Razorpay Key Secret
 });
 
-// Stripe route
-// router.post(
-//   "/process-stripe",
-//   catchAsyncErrors(async (req, res, next) => {
-//     const myPayment = await stripe.paymentIntents.create({
-//       amount: req.body.amount,
-//       currency: "INR",
-//       metadata: {
-//         company: "Daffodeal",
-//       },
-//     });
-//     res.status(200).json({
-//       success: true,
-//       client_secret: myPayment.client_secret,
-//     });
-//   })
-// );
 
 // Razorpay route
 router.post(
@@ -45,13 +28,6 @@ router.post(
   })
 );
 
-// Fetch Stripe API Key
-// router.get(
-//   "/stripeapikey",
-//   catchAsyncErrors(async (req, res, next) => {
-//     res.status(200).json({ stripeApikey: process.env.STRIPE_API_KEY });
-//   })
-// );
 
 // Fetch Razorpay API Key
 router.get(

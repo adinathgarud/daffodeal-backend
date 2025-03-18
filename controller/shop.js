@@ -4,6 +4,7 @@ const router = express.Router();
 const jwt = require("jsonwebtoken");
 const sendMail = require("../utils/sendMail");
 const Shop = require("../model/shop");
+const Order = require("../model/order");
 const { isAuthenticated, isSeller, isAdmin } = require("../middleware/auth");
 const cloudinary = require("cloudinary");
 const catchAsyncErrors = require("../middleware/catchAsyncErrors");
@@ -390,5 +391,70 @@ router.get("/verify-gst/:gstNumber", async (req, res) => {
     res.status(500).json({ error: error.response?.data || "API issue or invalid GST number" });
   }
 });
+
+
+router.get(
+  "/monthly-report/:shopId",
+  catchAsyncErrors(async (req, res, next) => {
+    try {
+      const shopId = req.params.shopId;
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+
+      // Fetch total orders for the specified shop
+      const totalOrdersCount = await Order.countDocuments({
+        "cart.shopId": shopId,
+        createdAt: {
+          $gte: new Date(currentYear, currentMonth, 1),
+          $lt: new Date(currentYear, currentMonth + 1, 1),
+        },
+      });
+
+      // Fetch total sales for the specified shop
+      const totalSales = await Order.aggregate([
+        {
+          $match: {
+            "cart.shopId": shopId,
+            createdAt: {
+              $gte: new Date(currentYear, currentMonth, 1),
+              $lt: new Date(currentYear, currentMonth + 1, 1),
+            },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: "$totalPrice" }, // Assuming 'totalPrice' is the field for sales amount
+          },
+        },
+      ]);
+
+
+      // Fetch all orders for the specified shop
+      const orders = await Order.find({
+        "cart.shopId": shopId,
+        createdAt: {
+          $gte: new Date(currentYear, currentMonth, 1),
+          $lt: new Date(currentYear, currentMonth + 1, 1),
+        },
+      }).sort({ createdAt: -1 }); // Sort by creation date
+
+      // Fetch shop information
+      const shop = await Shop.findById(shopId);
+
+      res.status(200).json({
+        success: true,
+        totalOrdersCount,
+        totalSales: totalSales[0]?.total || 0, // Default to 0 if no sales
+        shop,
+        orders, // Include all orders in the response
+      });
+    } catch (error) {
+      return next(new ErrorHandler(error.message, 500));
+    }
+  })
+);
+
+
 
 module.exports = router;
