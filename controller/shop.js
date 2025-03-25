@@ -381,7 +381,7 @@ router.get("/verify-gst/:gstNumber", async (req, res) => {
 
   try {
     const response = await axios.get(
-      `https://gst-verification-api-get-profile-returns-data.p.rapidapi.com/v1/gstin/${gstNumber}/details`,
+      `https://gst-verification-api-get-profile-returns-data.p.rapidapi.com/v1/gstin/${gstNumber}/return/2024-25`,
       {
         headers: {
           "x-rapidapi-key": process.env.RAPIDAPI_KEY, // Store API key in .env
