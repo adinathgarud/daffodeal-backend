@@ -384,11 +384,12 @@ router.get("/verify-gst/:gstNumber", async (req, res) => {
 
   try {
     const response = await axios.get(
-      `https://gst-verification-api-get-profile-returns-data.p.rapidapi.com/v1/gstin/${gstNumber}/details`,
+     
+      `https://gst-insights-api.p.rapidapi.com/getGSTDetailsUsingGST/${gstNumber}`,
       {
         headers: {
           "x-rapidapi-key": process.env.RAPIDAPI_KEY, // Ensure API key is set
-          "x-rapidapi-host": "gst-verification-api-get-profile-returns-data.p.rapidapi.com",
+          "x-rapidapi-host": "gst-insights-api.p.rapidapi.com",
         },
       }
     );
