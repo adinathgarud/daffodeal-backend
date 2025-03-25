@@ -379,21 +379,28 @@ router.get("/verify-gst/:gstNumber", async (req, res) => {
     return res.status(400).json({ error: "GST Number is required" });
   }
 
+  console.log(`Requesting GST details for: ${gstNumber}`);
+  console.log("Using API Key:", process.env.RAPIDAPI_KEY ? "Available" : "Not Set");
+
   try {
     const response = await axios.get(
-      `https://gst-verification-api-get-profile-returns-data.p.rapidapi.com/v1/gstin/${gstNumber}/return/2024-25`,
+      `https://gst-verification-api-get-profile-returns-data.p.rapidapi.com/v1/gstin/${gstNumber}/details`,
       {
         headers: {
-          "x-rapidapi-key": process.env.RAPIDAPI_KEY, // Store API key in .env
+          "x-rapidapi-key": process.env.RAPIDAPI_KEY, // Ensure API key is set
           "x-rapidapi-host": "gst-verification-api-get-profile-returns-data.p.rapidapi.com",
         },
       }
     );
 
+    console.log("API Response:", response.data);
     res.json(response.data); // Send API response to the frontend
   } catch (error) {
     console.error("API Error:", error.response ? error.response.data : error.message);
-    res.status(500).json({ error: error.response?.data || "API issue or invalid GST number" });
+
+    res.status(500).json({
+      error: error.response?.data?.message || "API issue or invalid GST number",
+    });
   }
 });
 
