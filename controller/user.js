@@ -25,6 +25,11 @@ router.post("/create-user", async (req, res, next) => {
       return next(new ErrorHandler("User with this email or mobile already exists", 400));
     }
 
+    const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{6,}$/;
+        if (!passwordRegex.test(password)) {
+          return next(new ErrorHandler("Password must be at least 6 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.", 400));
+        }
+
     // const myCloud = await cloudinary.v2.uploader.upload(avatar, {
     //   folder: "avatars",
     // });
@@ -343,6 +348,11 @@ router.put(
       if (!isPasswordMatched) {
         return next(new ErrorHandler("Old password is incorrect!", 400));
       }
+
+      const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{6,}$/;
+        if (!passwordRegex.test(req.body.newPassword)) {
+          return next(new ErrorHandler("Password must be at least 6 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.", 400));
+        }
 
       if (req.body.newPassword !== req.body.confirmPassword) {
         return next(

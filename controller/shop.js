@@ -16,10 +16,15 @@ require("dotenv").config();
 // create shop
 router.post("/create-shop", catchAsyncErrors(async (req, res, next) => {
   try {
-    const { email } = req.body;
+    const { email , password } = req.body;
     const sellerEmail = await Shop.findOne({ email });
     if (sellerEmail) {
       return next(new ErrorHandler("User already exists", 400));
+    }
+
+    const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{6,}$/;
+    if (!passwordRegex.test(password)) {
+      return next(new ErrorHandler("Password must be at least 6 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.", 400));
     }
 
     // const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
