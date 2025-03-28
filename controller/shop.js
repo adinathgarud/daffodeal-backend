@@ -49,8 +49,8 @@ router.post("/create-shop", catchAsyncErrors(async (req, res, next) => {
 
     const activationToken = createActivationToken(seller);
 
-    const activationUrl = `http://localhost:3000/seller/activation/${activationToken}`;
-    //const activationUrl = `http://daffodeal.com/activation/${activationToken}`;
+    //const activationUrl = `http://localhost:3000/seller/activation/${activationToken}`;
+    const activationUrl = `http://daffodeal.com/activation/${activationToken}`;
 
     try {
       await sendMail({
